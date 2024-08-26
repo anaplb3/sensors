@@ -4,10 +4,10 @@ import os
 
 load_dotenv()
 
-psql_db = PostgresqlDatabase(database="sensors",
+psql_db = PostgresqlDatabase(database=str(os.environ['DATABASE_NAME']),
                              user=str(os.environ['POSTGRES_USER']),
                              password=str(os.environ['POSTGRES_PASSWORD']),
-                             host="db")
+                             host=str(os.environ['HOST']))
 
 class Base(Model):
     class Meta:
