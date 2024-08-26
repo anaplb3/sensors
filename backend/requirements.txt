@@ -1,0 +1,7 @@
+Flask
+flask-restx
+psycopg2-binary
+peewee
+pandas
+python-dotenv
+flask-cors
