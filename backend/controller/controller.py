@@ -2,7 +2,7 @@ from flask_restx import Namespace, Resource, fields
 from werkzeug.datastructures import FileStorage
 from service.SensorsDataService import SensorsDataService
 
-api = Namespace('sensores', description='Recebe dados dos sensores')
+api = Namespace('sensors', description='Recebe dados dos sensores')
 data = api.model('Data', {
     'equipmentId': fields.String(required=True, description='Id do equipamento'),
     'timestamp': fields.DateTime(required=True, description='Timestamp'),

@@ -1,7 +1,13 @@
 import './App.css';
 import { Chart, registerables } from 'chart.js';
 import { useState } from 'react';
-import { BarChart } from './BarChart';
+import { BarChart } from './components/BarChart';
+import SelectComponent from './components/SelectComponent';
+import { Tab, Tabs, Container, Alert} from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.css';
+import FormComponent from './components/FormComponent';
+import FormCsvComponent from './components/FormCsvComponent';
+import { addSensorsInfoFromCsv, getSensorsInfo, addSensorsInfo } from './service/api';
 
 Chart.register(...registerables);
 
@@ -19,18 +25,26 @@ function App() {
       ]
     }
   );
-  const [timeLimit, setTimeLimit] = useState("1 month");
+  const [timeLimit, setTimeLimit] = useState("1 mês");
+  const [showSucessAlert, setShowSuccessAlert] = useState(false);
+  const [showFailAlert, setShowFailAlert] = useState(false);
 
-  
-  const getInfo = async (query) => {
-    await fetch(`${process.env.REACT_APP_BACKEND_SERVICE_URL}/sensores/averageValues?${query}`)
-          .then((response) => response.json())
-          .then((data) => {
-            setSensorsData(transformData(data));
-          })
-          .catch((err) => {
-            console.log(err.message)
-          });
+  const setInfo = (data) => {
+    setShowSuccessAlert(true);
+    setSensorsData(transformData(data));
+  }
+
+  const handleGetInfo = async (timeLimitValue, timeLimitText) => {
+    setTimeLimit(timeLimitText);
+    getSensorsInfo(timeLimitValue, setInfo, () => setShowFailAlert(true));
+  };
+
+  const handleAddInfo = async (equipmentId, timestamp, value) => {
+    addSensorsInfo(equipmentId, timestamp, value, () => setShowSuccessAlert(true), () => setShowFailAlert(true))
+  };
+
+  const handleAddInfoFromCsv = async (csvFile) => {
+    addSensorsInfoFromCsv(csvFile, () => setShowSuccessAlert(true), () => setShowFailAlert(true));
   };
 
   const transformData = (response) => {
@@ -55,38 +69,49 @@ function App() {
     return data;
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const form = e.target;
-    const formData = new FormData(form);
-    var index = e.target.timeLimit.selectedIndex;
-    setTimeLimit(e.target.timeLimit[index].text)
-    const query = new URLSearchParams(formData).toString()
-    
-    getInfo(query);
-  }
-
   return (
-    <div className='App'>
-      <form method='get' onSubmit={handleSubmit}>
-        <label> 
-          Select a timebox: 
-          <select name="timeLimit">
-            <option value={"24h"}> 24 hours </option>
-            <option value={"48h"}> 48 hours </option>
-            <option value={"1w"}> 1 week </option>
-            <option value={"1m"}> 1 month </option>
-          </select>
-        </label>
+    <Container>
+      <Tabs
+        id="home-tabs"
+        defaultActiveKey={"get-data"}
+        className='mb-3'
+      >
+        <Tab eventKey={"get-data"} title={"Média dos valores"}>
 
-        <hr />
-        <button type='submit'> Submit </button>
-      </form>
+          <SelectComponent getInfo={handleGetInfo}/>
+          <BarChart chartData={sensorsData} timeLimit={timeLimit}/>
 
-      <BarChart chartData={sensorsData} timeLimit={timeLimit}/>
-      
-    </div>
+        </Tab>
+        <Tab eventKey={"upload-data"} title={"Entre com os dados"}>
+  
+          <FormComponent addInfo={handleAddInfo}/>
+
+        </Tab>
+        <Tab eventKey={"upload-csv"} title={"Entre com o CSV"}>
+          
+          <FormCsvComponent addDataFromCSV={handleAddInfoFromCsv}/>
+
+        </Tab>
+      </Tabs>
+
+      <Alert
+        show={showSucessAlert}
+        variant='success'
+        className="w-25 mt-3 ml-3"
+        onClose={() => setShowSuccessAlert(false)}
+        dismissible>
+          Tudo certo!
+      </Alert>
+
+      <Alert
+        show={showFailAlert}
+        variant='danger'
+        className="w-25 mt-3 ml-3"
+        onClose={() => setShowFailAlert(false)}
+        dismissible>
+          Não foi possível enviar os dados.
+      </Alert>
+    </Container>
   );
 
 }
