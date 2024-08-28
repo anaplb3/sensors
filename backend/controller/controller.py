@@ -10,10 +10,13 @@ data = api.model('Data', {
 })
 
 upload_parser = api.parser()
-upload_parser.add_argument('file', location='files', type=FileStorage, required=True)
+upload_parser.add_argument('file', location='files', type=FileStorage, required=True, help="Arquivo CSV")
 
 parser = api.parser()
-parser.add_argument('timeLimit', type=str, required=True)
+parser.add_argument('timeLimit', 
+                    type=str, 
+                    required=True, 
+                    choices=('24h', '48h', '1w', '1m'))
 service = SensorsDataService()
 
 @api.route('/')
@@ -21,7 +24,7 @@ service = SensorsDataService()
 class SensorsData(Resource):
     def post(self):
         content = api.payload
-        service.create_data_from_payload(content)
+        service.create_data_from_payload(content), 201
 
 @api.route("/averageValues")
 @api.expect(parser)
@@ -36,5 +39,5 @@ class SensorsDataCSV(Resource):
     def post(self):
         args = upload_parser.parse_args()
         uploaded_file = args['file']
-        service.create_data_from_csv(uploaded_file)
+        service.create_data_from_csv(uploaded_file), 201
         

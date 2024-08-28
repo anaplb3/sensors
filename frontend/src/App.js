@@ -1,4 +1,3 @@
-import './App.css';
 import { Chart, registerables } from 'chart.js';
 import { useState } from 'react';
 import { BarChart } from './components/BarChart';
@@ -29,14 +28,9 @@ function App() {
   const [showSucessAlert, setShowSuccessAlert] = useState(false);
   const [showFailAlert, setShowFailAlert] = useState(false);
 
-  const setInfo = (data) => {
-    setShowSuccessAlert(true);
-    setSensorsData(transformData(data));
-  }
-
   const handleGetInfo = async (timeLimitValue, timeLimitText) => {
     setTimeLimit(timeLimitText);
-    getSensorsInfo(timeLimitValue, setInfo, () => setShowFailAlert(true));
+    getSensorsInfo(timeLimitValue, (data) => setSensorsData(transformData(data)), () => setShowFailAlert(true));
   };
 
   const handleAddInfo = async (equipmentId, timestamp, value) => {
@@ -75,11 +69,17 @@ function App() {
         id="home-tabs"
         defaultActiveKey={"get-data"}
         className='mb-3'
+        onSelect={() => {
+          setShowSuccessAlert(false);
+          setShowFailAlert(false);
+        }}
       >
         <Tab eventKey={"get-data"} title={"Média dos valores"}>
-
-          <SelectComponent getInfo={handleGetInfo}/>
-          <BarChart chartData={sensorsData} timeLimit={timeLimit}/>
+          <div>
+            <SelectComponent getInfo={handleGetInfo}/>
+            <BarChart chartData={sensorsData} timeLimit={timeLimit}/>
+          </div>
+          
 
         </Tab>
         <Tab eventKey={"upload-data"} title={"Entre com os dados"}>
@@ -99,7 +99,9 @@ function App() {
         variant='success'
         className="w-25 mt-3 ml-3"
         onClose={() => setShowSuccessAlert(false)}
-        dismissible>
+        dismissible
+        style={{float: 'inline-end'}}
+      >
           Tudo certo!
       </Alert>
 
@@ -108,7 +110,9 @@ function App() {
         variant='danger'
         className="w-25 mt-3 ml-3"
         onClose={() => setShowFailAlert(false)}
-        dismissible>
+        dismissible
+        style={{float: 'inline-end'}}
+      >
           Não foi possível enviar os dados.
       </Alert>
     </Container>
